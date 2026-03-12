@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Notifications - Stay updated with skill matches, likes, and comments on Mini LinkedIn.">
+    <title>Notifications - Mini LinkedIn</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+</head>
+<body>
+    <!-- Page Loader -->
+    <div class="page-loader" id="page-loader">
+        <div class="loader-content">
+            <div class="loader-logo">Mini LinkedIn</div>
+            <div class="spinner spinner-dark spinner-lg"></div>
+        </div>
+    </div>
+
+    <!-- Navbar -->
+    <div id="navbar"></div>
+
+    <!-- Notifications Content -->
+    <div style="max-width: 700px; margin: 24px auto; padding: 0 16px;">
+        <div class="card" style="overflow: hidden;">
+            <!-- Header -->
+            <div style="padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+                <h2 style="font-size: 1.3rem; font-weight: 800; display: flex; align-items: center; gap: 10px;">
+                    <i class="fas fa-bell" style="color: var(--primary);"></i> Notifications
+                </h2>
+                <button class="btn btn-ghost btn-sm" onclick="markAllRead()" id="mark-read-btn">
+                    <i class="fas fa-check-double"></i> Mark all as read
+                </button>
+            </div>
+
+            <!-- Notifications List -->
+            <div id="notifications-list">
+                <!-- Loaded dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/firebase-config.js"></script>
+    <script src="/js/utils.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                await requireAuth();
+                await renderNavbar('notifications');
+                await loadNotifications();
+
+                document.getElementById('page-loader').classList.add('hidden');
+            } catch (error) {
+                console.error('Notifications init error:', error);
+                document.getElementById('page-loader').classList.add('hidden');
+            }
+        });
+
+        async function loadNotifications() {
+            const container = document.getElementById('notifications-list');
+            showSkeletonLoader(container, 5);
+
+            try {
+                const response = await apiRequest('/api/users/notifications');
+
+                if (response.success && response.data.length > 0) {
+                    container.innerHTML = response.data.map((notif) => {
+                        // Determine icon and styling based on notification type
+                        let iconClass = 'fas fa-bell';
+                        let iconType = 'comment';
+
+                        switch (notif.type) {
+                            case 'skill_match':
+                                iconClass = 'fas fa-handshake';
+                                iconType = 'skill-match';
+                                break;
+                            case 'post_like':
+                                iconClass = 'fas fa-heart';
+                                iconType = 'like';
+                                break;
+                            case 'post_comment':
+                                iconClass = 'fas fa-comment';
+                                iconType = 'comment';
+                                break;
+                            case 'connection_request':
+                                iconClass = 'fas fa-user-plus';
+                                iconType = 'skill-match';
+                                break;
+                        }
+
+                        const relatedUser = notif.relatedUser;
+                        const profileLink = relatedUser ? `/profile.html?id=${relatedUser._id || relatedUser}` : '#';
+
+                        return `
+                            <div class="notification-item ${notif.read ? '' : 'unread'}" 
+                                onclick="window.location.href='${profileLink}'">
+                                <div class="notification-icon ${iconType}">
+                                    <i class="${iconClass}"></i>
+                                </div>
+                                <div style="flex: 1;">
+                                    ${relatedUser && relatedUser.fullName ? `
+                                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                                            ${avatarHTML(relatedUser.profilePicture, relatedUser.fullName, 'avatar-sm')}
+                                            <strong style="font-size: 0.85rem;">${escapeHtml(relatedUser.fullName)}</strong>
+                                        </div>
+                                    ` : ''}
+                                    <div class="notification-text">${escapeHtml(notif.message)}</div>
+                                    <div class="notification-time">${timeAgo(notif.createdAt)}</div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    container.innerHTML = `
+                        <div class="empty-state" style="padding: 60px 20px;">
+                            <i class="fas fa-bell-slash"></i>
+                            <h3>No Notifications</h3>
+                            <p>You're all caught up! Notifications for skill matches, likes, and comments will appear here.</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Load notifications error:', error);
+                container.innerHTML = `
+                    <div class="empty-state" style="padding: 40px;">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <h3>Error Loading Notifications</h3>
+                        <p>Please try refreshing the page.</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function markAllRead() {
+            try {
+                const btn = document.getElementById('mark-read-btn');
+                setButtonLoading(btn, 'Marking...');
+
+                await apiRequest('/api/users/notifications/read', {
+                    method: 'PUT',
+                });
+
+                // Remove unread styling from all notifications
+                document.querySelectorAll('.notification-item.unread').forEach((item) => {
+                    item.classList.remove('unread');
+                });
+
+                // Remove badge from navbar
+                const badge = document.querySelector('.nav-badge');
+                if (badge) badge.remove();
+
+                showToast('All notifications marked as read!', 'success');
+                resetButton(btn);
+            } catch (error) {
+                showToast('Error marking notifications as read', 'error');
+            }
+        }
+    </script>
+</body>
+</html>

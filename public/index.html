@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Mini LinkedIn - A professional networking platform with AI-powered profile improvements. Connect, share, and grow your career.">
+    <title>Mini LinkedIn - Professional Networking with AI</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="/css/styles.css">
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+</head>
+<body>
+    <!-- =========================================
+         HERO SECTION
+         ========================================= -->
+    <section class="hero-section">
+        <!-- Floating decorative shapes -->
+        <div class="floating-shapes">
+            <div class="floating-shape"></div>
+            <div class="floating-shape"></div>
+            <div class="floating-shape"></div>
+            <div class="floating-shape"></div>
+        </div>
+
+        <div class="hero-content">
+            <h1 class="hero-title">Welcome to<br>Mini LinkedIn</h1>
+            <p class="hero-subtitle">
+                Your AI-powered professional networking platform. 
+                Connect with like-minded professionals, share your journey, 
+                and let AI enhance your professional presence.
+            </p>
+            <div class="hero-buttons">
+                <a href="/signup.html" class="hero-btn-primary" id="hero-join-btn">
+                    Join Now — It's Free
+                </a>
+                <a href="/login.html" class="hero-btn-secondary" id="hero-login-btn">
+                    Sign In
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- =========================================
+         FEATURES SECTION
+         ========================================= -->
+    <section class="features-section">
+        <div style="text-align: center; margin-bottom: 48px;">
+            <h2 style="font-size: 2rem; font-weight: 800; color: var(--text-primary); margin-bottom: 12px;">
+                Why Choose Mini LinkedIn?
+            </h2>
+            <p style="font-size: 1.05rem; color: var(--text-secondary); max-width: 600px; margin: 0 auto;">
+                Powerful features designed to accelerate your professional growth with cutting-edge AI technology.
+            </p>
+        </div>
+
+        <div class="features-grid">
+            <!-- Feature 1: AI Bio Enhancer -->
+            <div class="feature-card" id="feature-ai-bio">
+                <div class="feature-icon" style="background: linear-gradient(135deg, #667eea20, #764ba220); color: #667eea;">
+                    <i class="fas fa-magic"></i>
+                </div>
+                <h3>AI Bio Enhancer</h3>
+                <p>Transform your rough bio into a polished, professional summary that makes recruiters take notice.</p>
+            </div>
+
+            <!-- Feature 2: Smart Networking -->
+            <div class="feature-card" id="feature-networking">
+                <div class="feature-icon" style="background: linear-gradient(135deg, #057642, #0a8f52); color: white;">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h3>Smart Skill Matching</h3>
+                <p>Automatically discover professionals who share your skills and interests. Build meaningful connections.</p>
+            </div>
+
+            <!-- Feature 3: Professional Feed -->
+            <div class="feature-card" id="feature-feed">
+                <div class="feature-icon" style="background: var(--primary-light); color: var(--primary);">
+                    <i class="fas fa-newspaper"></i>
+                </div>
+                <h3>Professional Feed</h3>
+                <p>Share your achievements, learn from others, and stay updated with AI-enhanced post captions.</p>
+            </div>
+
+            <!-- Feature 4: Rich Profiles -->
+            <div class="feature-card" id="feature-profiles">
+                <div class="feature-icon" style="background: linear-gradient(135deg, #e91e6320, #ff572220); color: #e91e63;">
+                    <i class="fas fa-id-card"></i>
+                </div>
+                <h3>Rich Profiles</h3>
+                <p>Showcase your skills, experience, education, and achievements in a beautifully designed profile.</p>
+            </div>
+
+            <!-- Feature 5: Secure Auth -->
+            <div class="feature-card" id="feature-auth">
+                <div class="feature-icon" style="background: linear-gradient(135deg, #ff980020, #f4511e20); color: #ff9800;">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h3>Secure & Private</h3>
+                <p>Enterprise-grade Firebase authentication ensures your data is always safe and secure.</p>
+            </div>
+
+            <!-- Feature 6: Cloudinary -->
+            <div class="feature-card" id="feature-media">
+                <div class="feature-icon" style="background: linear-gradient(135deg, #00bcd420, #009688 20); color: #00bcd4;">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                </div>
+                <h3>Cloud Media Storage</h3>
+                <p>Upload and share images with automatic optimization powered by Cloudinary infrastructure.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- =========================================
+         CTA SECTION
+         ========================================= -->
+    <section style="background: var(--gradient-hero); padding: 80px 20px; text-align: center;">
+        <h2 style="font-size: 2rem; font-weight: 800; color: white; margin-bottom: 16px;">
+            Ready to Boost Your Career?
+        </h2>
+        <p style="font-size: 1.1rem; color: rgba(255,255,255,0.9); margin-bottom: 32px; max-width: 500px; margin-left: auto; margin-right: auto;">
+            Join thousands of professionals using AI to enhance their networking experience.
+        </p>
+        <a href="/signup.html" class="hero-btn-primary" id="cta-signup-btn">
+            Get Started for Free
+        </a>
+    </section>
+
+    <!-- =========================================
+         FOOTER
+         ========================================= -->
+    <footer style="background: var(--bg-dark); color: rgba(255,255,255,0.7); padding: 40px 20px; text-align: center;">
+        <div style="max-width: 1128px; margin: 0 auto;">
+            <h3 style="font-size: 1.5rem; font-weight: 800; color: white; margin-bottom: 8px;">
+                Mini LinkedIn
+            </h3>
+            <p style="font-size: 0.85rem; margin-bottom: 16px;">
+                AI-Powered Professional Networking Platform
+            </p>
+            <div style="display: flex; justify-content: center; gap: 24px; margin-bottom: 24px;">
+                <a href="#" style="color: rgba(255,255,255,0.7); text-decoration: none; transition: color 0.3s;" 
+                   onmouseover="this.style.color='white'" onmouseout="this.style.color='rgba(255,255,255,0.7)'">
+                    <i class="fab fa-github" style="font-size: 1.5rem;"></i>
+                </a>
+                <a href="#" style="color: rgba(255,255,255,0.7); text-decoration: none; transition: color 0.3s;"
+                   onmouseover="this.style.color='white'" onmouseout="this.style.color='rgba(255,255,255,0.7)'">
+                    <i class="fab fa-twitter" style="font-size: 1.5rem;"></i>
+                </a>
+                <a href="#" style="color: rgba(255,255,255,0.7); text-decoration: none; transition: color 0.3s;"
+                   onmouseover="this.style.color='white'" onmouseout="this.style.color='rgba(255,255,255,0.7)'">
+                    <i class="fab fa-linkedin" style="font-size: 1.5rem;"></i>
+                </a>
+            </div>
+            <p style="font-size: 0.75rem; color: rgba(255,255,255,0.5);">
+                &copy; 2026 Mini LinkedIn. Built with ❤️ using Node.js, MongoDB, Firebase & Groq AI.
+            </p>
+        </div>
+    </footer>
+
+    <script src="/js/utils.js"></script>
+    <script>
+        // If user is already logged in, show a "Go to Feed" button instead
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize Firebase (config will be loaded from firebase-config.js)
+            if (typeof firebase !== 'undefined' && window.firebaseConfig) {
+                firebase.initializeApp(window.firebaseConfig);
+                redirectIfAuthenticated();
+            }
+        });
+    </script>
+</body>
+</html>

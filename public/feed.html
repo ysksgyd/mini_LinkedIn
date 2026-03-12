@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Mini LinkedIn Feed - Stay updated with the latest posts from your professional network.">
+    <title>Home Feed - Mini LinkedIn</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+</head>
+<body>
+    <!-- Page Loader -->
+    <div class="page-loader" id="page-loader">
+        <div class="loader-content">
+            <div class="loader-logo">Mini LinkedIn</div>
+            <div class="spinner spinner-dark spinner-lg"></div>
+        </div>
+    </div>
+
+    <!-- Navbar -->
+    <div id="navbar"></div>
+
+    <!-- Main Layout -->
+    <div class="main-layout">
+        <!-- Left Sidebar - Profile Card -->
+        <aside class="sidebar-left">
+            <div class="card sidebar-profile-card" id="sidebar-profile">
+                <!-- Loaded dynamically -->
+            </div>
+        </aside>
+
+        <!-- Main Feed Content -->
+        <main class="main-content">
+            <!-- Create Post -->
+            <div class="card create-post-card" id="create-post-card">
+                <div class="create-post-trigger">
+                    <div id="create-post-avatar"></div>
+                    <button class="create-post-input" onclick="openCreatePostModal()" id="create-post-trigger-btn">
+                        What's on your mind?
+                    </button>
+                </div>
+                <div class="create-post-actions">
+                    <button class="btn btn-ghost btn-sm" onclick="openCreatePostModal()" id="create-post-photo-btn">
+                        <i class="fas fa-image" style="color: #057642;"></i> Photo
+                    </button>
+                    <button class="btn btn-ghost btn-sm" onclick="openCreatePostModal()" id="create-post-article-btn">
+                        <i class="fas fa-pen-fancy" style="color: #e7a33e;"></i> Write Article
+                    </button>
+                </div>
+            </div>
+
+            <!-- Feed Posts -->
+            <div id="feed-container">
+                <!-- Posts loaded dynamically -->
+            </div>
+
+            <!-- Load More -->
+            <div id="load-more-container" style="text-align: center; padding: 20px; display: none;">
+                <button class="btn btn-secondary" onclick="loadMorePosts()" id="load-more-btn">
+                    Load More Posts
+                </button>
+            </div>
+        </main>
+
+        <!-- Right Sidebar -->
+        <aside class="sidebar-right">
+            <div class="card people-card" id="people-card">
+                <h3 class="section-title" style="font-size: 0.95rem; margin-bottom: 12px;">
+                    <i class="fas fa-user-plus"></i> People You May Know
+                </h3>
+                <div id="people-list">
+                    <!-- Loaded dynamically -->
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- =========================================
+         CREATE POST MODAL
+         ========================================= -->
+    <div class="modal-overlay" id="create-post-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3><i class="fas fa-edit" style="color: var(--primary);"></i> Create Post</h3>
+                <button class="modal-close" onclick="closeCreatePostModal()" id="close-post-modal-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <textarea class="input-field" id="post-content" rows="5" placeholder="Share your thoughts, achievements, or learnings..." style="resize: none;"></textarea>
+                
+                <!-- AI Enhance Caption Button -->
+                <div style="margin-top: 10px; display: flex; gap: 8px;">
+                    <button class="btn btn-ai btn-sm" onclick="enhanceCaption()" id="enhance-caption-btn">
+                        <i class="fas fa-magic"></i> AI Enhance Caption
+                    </button>
+                </div>
+
+                <!-- Image Upload -->
+                <div style="margin-top: 12px;">
+                    <label for="post-image" class="btn btn-ghost btn-sm" style="cursor: pointer;">
+                        <i class="fas fa-image" style="color: #057642;"></i> Add Photo
+                    </label>
+                    <input type="file" id="post-image" accept="image/*" style="display: none;">
+                </div>
+                <div id="post-image-preview"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" onclick="closeCreatePostModal()" id="cancel-post-btn">Cancel</button>
+                <button class="btn btn-primary" onclick="submitPost()" id="submit-post-btn">
+                    <i class="fas fa-paper-plane"></i> Post
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/firebase-config.js"></script>
+    <script src="/js/utils.js"></script>
+    <script src="/js/feed.js"></script>
+</body>
+</html>

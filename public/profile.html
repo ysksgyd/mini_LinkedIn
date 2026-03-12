@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="User Profile - Mini LinkedIn">
+    <title>Profile - Mini LinkedIn</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+</head>
+
+<body>
+    <!-- Page Loader -->
+    <div class="page-loader" id="page-loader">
+        <div class="loader-content">
+            <div class="loader-logo">Mini LinkedIn</div>
+            <div class="spinner spinner-dark spinner-lg"></div>
+        </div>
+    </div>
+
+    <!-- Navbar -->
+    <div id="navbar"></div>
+
+    <!-- Profile Content -->
+    <div style="max-width: 800px; margin: 24px auto; padding: 0 16px;">
+        <!-- Profile Card -->
+        <div class="card" id="profile-card" style="margin-bottom: 24px;">
+            <!-- Loaded dynamically -->
+        </div>
+
+        <!-- About Section -->
+        <div class="card" id="about-section" style="padding: 24px; margin-bottom: 24px; display: none;">
+            <!-- Loaded dynamically -->
+        </div>
+
+        <!-- Skills Section -->
+        <div class="card" id="skills-section" style="padding: 24px; margin-bottom: 24px; display: none;">
+            <!-- Loaded dynamically -->
+        </div>
+
+        <!-- Experience Section -->
+        <div class="card" id="experience-section" style="padding: 24px; margin-bottom: 24px; display: none;">
+            <!-- Loaded dynamically -->
+        </div>
+
+        <!-- Education Section -->
+        <div class="card" id="education-section" style="padding: 24px; margin-bottom: 24px; display: none;">
+            <!-- Loaded dynamically -->
+        </div>
+
+        <!-- User's Posts -->
+        <div class="card" style="padding: 24px; margin-bottom: 24px;">
+            <h3 class="section-title"><i class="fas fa-newspaper"></i> Posts</h3>
+            <div id="user-posts-container">
+                <!-- Loaded dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/firebase-config.js"></script>
+    <script src="/js/utils.js"></script>
+    <script>
+        let profileUser = null;
+        let isOwnProfile = false;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                await requireAuth();
+                await renderNavbar('profile');
+
+                // Determine which profile to show
+                const urlParams = new URLSearchParams(window.location.search);
+                const userId = urlParams.get('id');
+
+                if (userId) {
+                    // Viewing another user's profile
+                    await loadUserProfile(userId);
+                } else {
+                    // Viewing own profile
+                    await loadOwnProfile();
+                }
+
+                document.getElementById('page-loader').classList.add('hidden');
+            } catch (error) {
+                console.error('Profile init error:', error);
+                showToast('Error loading profile', 'error');
+                document.getElementById('page-loader').classList.add('hidden');
+            }
+        });
+
+        async function loadOwnProfile() {
+            try {
+                const response = await apiRequest('/api/users/me');
+                if (response.success && response.data) {
+                    profileUser = response.data;
+                    isOwnProfile = true;
+                    renderProfile();
+                    loadUserPosts(profileUser._id);
+                } else {
+                    // No profile yet, redirect to create one
+                    window.location.href = '/edit-profile.html';
+                }
+            } catch (error) {
+                window.location.href = '/edit-profile.html';
+            }
+        }
+
+        async function loadUserProfile(userId) {
+            try {
+                const response = await apiRequest(`/api/users/${userId}`);
+                if (response.success) {
+                    profileUser = response.data;
+                    // Check if this is the current user's profile
+                    isOwnProfile = window.currentUser && window.currentUser._id === userId;
+                    renderProfile();
+                    loadUserPosts(userId);
+                }
+            } catch (error) {
+                showToast('User not found', 'error');
+            }
+        }
+
+        function renderProfile() {
+            const card = document.getElementById('profile-card');
+            const u = profileUser;
+
+            card.innerHTML = `
+                <div class="profile-banner"></div>
+                <div class="profile-info-section">
+                    <div class="profile-avatar-wrapper">
+                        ${avatarHTML(u.profilePicture, u.fullName, 'avatar-xl')}
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px;">
+                        <div>
+                            <h1 class="profile-name">${escapeHtml(u.fullName)}</h1>
+                            ${u.headline ? `<p class="profile-headline">${escapeHtml(u.headline)}</p>` : ''}
+                            ${u.location ? `<p class="profile-location"><i class="fas fa-map-marker-alt"></i> ${escapeHtml(u.location)}</p>` : ''}
+                            <div class="profile-stats">
+                                <span class="profile-stat"><strong>${u.connections?.length || 0}</strong> connections</span>
+                            </div>
+                        </div>
+                        ${isOwnProfile ? `
+                            <a href="/edit-profile.html" class="btn btn-secondary btn-sm" id="edit-profile-btn">
+                                <i class="fas fa-pencil-alt"></i> Edit Profile
+                            </a>
+                        ` : `
+                            <div id="connection-btn-container">
+                                ${getConnectionButtonHTML()}
+                            </div>
+                        `}
+                    </div>
+                </div>
+            `;
+
+            // About section
+            if (u.bio) {
+                const aboutSection = document.getElementById('about-section');
+                aboutSection.style.display = 'block';
+                aboutSection.innerHTML = `
+                    <h3 class="section-title"><i class="fas fa-user"></i> About</h3>
+                    <p style="font-size: 0.9rem; line-height: 1.7; color: var(--text-secondary); white-space: pre-wrap;">${escapeHtml(u.bio)}</p>
+                `;
+            }
+
+            // Skills section
+            if (u.skills && u.skills.length > 0) {
+                const skillsSection = document.getElementById('skills-section');
+                skillsSection.style.display = 'block';
+                skillsSection.innerHTML = `
+                    <h3 class="section-title"><i class="fas fa-lightbulb"></i> Skills</h3>
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                        ${u.skills.map((skill) => `<span class="skill-tag">${escapeHtml(skill)}</span>`).join('')}
+                    </div>
+                `;
+            }
+
+            // Experience section
+            if (u.experience && u.experience.length > 0) {
+                const expSection = document.getElementById('experience-section');
+                expSection.style.display = 'block';
+                expSection.innerHTML = `
+                    <h3 class="section-title"><i class="fas fa-briefcase"></i> Experience</h3>
+                    ${u.experience.map((exp) => `
+                        <div class="timeline-item">
+                            <div class="timeline-icon"><i class="fas fa-briefcase"></i></div>
+                            <div class="timeline-content">
+                                <h4>${escapeHtml(exp.title)}</h4>
+                                <p>${escapeHtml(exp.company)}${exp.location ? ` · ${escapeHtml(exp.location)}` : ''}</p>
+                                <span class="timeline-date">${exp.startDate || ''}${exp.current ? ' - Present' : (exp.endDate ? ` - ${exp.endDate}` : '')}</span>
+                                ${exp.description ? `<p style="margin-top: 8px; font-size: 0.85rem;">${escapeHtml(exp.description)}</p>` : ''}
+                            </div>
+                        </div>
+                    `).join('')}
+                `;
+            }
+
+            // Education section
+            if (u.education && u.education.length > 0) {
+                const eduSection = document.getElementById('education-section');
+                eduSection.style.display = 'block';
+                eduSection.innerHTML = `
+                    <h3 class="section-title"><i class="fas fa-graduation-cap"></i> Education</h3>
+                    ${u.education.map((edu) => `
+                        <div class="timeline-item">
+                            <div class="timeline-icon"><i class="fas fa-graduation-cap"></i></div>
+                            <div class="timeline-content">
+                                <h4>${escapeHtml(edu.school)}</h4>
+                                <p>${escapeHtml(edu.degree || '')}${edu.field ? ` in ${escapeHtml(edu.field)}` : ''}</p>
+                                <span class="timeline-date">${edu.startYear || ''}${edu.endYear ? ` - ${edu.endYear}` : ''}</span>
+                            </div>
+                        </div>
+                    `).join('')}
+                `;
+            }
+        }
+
+        async function loadUserPosts(userId) {
+            const container = document.getElementById('user-posts-container');
+            showSkeletonLoader(container, 2);
+
+            try {
+                const response = await apiRequest(`/api/posts/user/${userId}`);
+
+                if (response.success && response.data.length > 0) {
+                    container.innerHTML = response.data.map((post) => `
+                        <div class="post-card" style="margin-bottom: 12px; border: 1px solid var(--border); box-shadow: none;">
+                            <div class="post-content" style="padding: 16px;">${escapeHtml(post.content)}</div>
+                            ${post.image ? `<img src="${post.image}" alt="Post image" class="post-image" style="max-height: 300px;">` : ''}
+                            <div class="post-stats" style="padding: 8px 16px;">
+                                <span>${post.likes.length} like${post.likes.length !== 1 ? 's' : ''}</span>
+                                <span>${post.comments.length} comment${post.comments.length !== 1 ? 's' : ''}</span>
+                            </div>
+                            <div style="padding: 4px 16px 8px; font-size: 0.75rem; color: var(--text-muted);">
+                                ${timeAgo(post.createdAt)}
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    container.innerHTML = `
+                        <div class="empty-state" style="padding: 30px;">
+                            <i class="fas fa-pen-fancy" style="font-size: 2rem;"></i>
+                            <h3>No Posts Yet</h3>
+                            <p>${isOwnProfile ? 'Share your first post with the community!' : 'This user hasn\'t posted yet.'}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                container.innerHTML = '<p style="text-align: center; color: var(--text-muted);">Error loading posts</p>';
+            }
+        }
+
+        function getConnectionButtonHTML() {
+            if (!profileUser) return '';
+            const status = profileUser.connectionStatus || 'none';
+            if (status === 'connected') {
+                return `<button class="btn btn-primary btn-sm" disabled><i class="fas fa-check"></i> Connected</button>`;
+            } else if (status === 'pending') {
+                return `<button class="btn btn-secondary btn-sm" disabled><i class="fas fa-clock"></i> Pending</button>`;
+            } else if (status === 'received') {
+                return `<button class="btn btn-primary btn-sm" onclick="acceptConnection('${profileUser._id}')"><i class="fas fa-check"></i> Accept Request</button>`;
+            } else {
+                return `<button class="btn btn-primary btn-sm" onclick="sendConnectionRequest('${profileUser._id}')"><i class="fas fa-user-plus"></i> Connect</button>`;
+            }
+        }
+
+        async function sendConnectionRequest(userId) {
+            try {
+                const btnContainer = document.getElementById('connection-btn-container');
+                if (btnContainer) btnContainer.innerHTML = `<button class="btn btn-secondary btn-sm" disabled>Sending...</button>`;
+
+                const response = await apiRequest(`/api/users/connect/${userId}`, { method: 'POST' });
+                if (response.success) {
+                    profileUser.connectionStatus = 'pending';
+                    if (btnContainer) btnContainer.innerHTML = getConnectionButtonHTML();
+                    showToast('Connection request sent!', 'success');
+                } else {
+                    if (btnContainer) btnContainer.innerHTML = getConnectionButtonHTML();
+                    showToast(response.message || 'Failed to send request', 'error');
+                }
+            } catch (error) {
+                showToast('Error sending request', 'error');
+                renderProfile();
+            }
+        }
+
+        async function acceptConnection(userId) {
+            try {
+                const btnContainer = document.getElementById('connection-btn-container');
+                if (btnContainer) btnContainer.innerHTML = `<button class="btn btn-secondary btn-sm" disabled>Accepting...</button>`;
+
+                const response = await apiRequest(`/api/users/connect/accept/${userId}`, { method: 'POST' });
+                if (response.success) {
+                    profileUser.connectionStatus = 'connected';
+                    // Update connection count
+                    if (!profileUser.connections) profileUser.connections = [];
+                    profileUser.connections.push(window.currentUser?._id);
+                    renderProfile();
+                    showToast('Connection accepted!', 'success');
+                } else {
+                    if (btnContainer) btnContainer.innerHTML = getConnectionButtonHTML();
+                    showToast(response.message || 'Failed to accept request', 'error');
+                }
+            } catch (error) {
+                showToast('Error accepting request', 'error');
+                renderProfile();
+            }
+        }
+    </script>
+</body>
+
+</html>
